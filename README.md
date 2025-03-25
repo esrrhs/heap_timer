@@ -1,5 +1,5 @@
 # heap_timer
-C++ heap timer, inspired by [Golang Quad-Tree Heap Timer](https://github.com/golang/go/blob/release-branch.go1.3/src/pkg/runtime/time.goc).
+C++ Quad-Tree Heap Timer, inspired by [Golang Quad-Tree Heap Timer](https://github.com/golang/go/blob/release-branch.go1.3/src/pkg/runtime/time.goc).
 header only, no dependencies.
 
 ## Usage
