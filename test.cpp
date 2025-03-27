@@ -1,4 +1,6 @@
 #include <thread>
+#include <iostream>
+#include <map>
 
 #include "heap_timer.h"
 
