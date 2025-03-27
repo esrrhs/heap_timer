@@ -48,7 +48,7 @@ public:
     ~HeapTimer() = default;
 
     uint32_t Add(uint32_t delay_ms) {
-        auto now = std::chrono::steady_clock::now();
+        auto now = std::chrono::system_clock::now();
         if (heap_size_ >= static_cast<int>(heap_.size())) {
             // Grow slice.
             size_t n = 16;
@@ -95,7 +95,7 @@ public:
     }
 
     std::vector<uint32_t> Update() {
-        auto now = std::chrono::steady_clock::now();
+        auto now = std::chrono::system_clock::now();
         std::vector<uint32_t> ret;
         while (true) {
             if (heap_size_ == 0) {
@@ -119,6 +119,10 @@ public:
         }
 
         return ret;
+    }
+
+    size_t Size() const {
+        return heap_size_;
     }
 
 private:
@@ -176,7 +180,7 @@ private:
 
 private:
     struct TimerNode {
-        std::chrono::time_point<std::chrono::steady_clock> when;
+        std::chrono::time_point<std::chrono::system_clock> when;
         uint32_t id = 0;
         int32_t i = 0;
     };
