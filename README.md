@@ -1,6 +1,9 @@
 # HeapTimer
-C++ Quad-Tree Heap Timer, inspired by [Golang Quad-Tree Heap Timer](https://github.com/golang/go/blob/release-branch.go1.3/src/pkg/runtime/time.goc).
+C++ 4-ary heap timer, inspired by [Golang 4-ary heap timer](https://github.com/golang/go/blob/release-branch.go1.3/src/pkg/runtime/time.goc).
 header only, no dependencies.
+
+`HeapTimer` is not copyable (nodes are not shared across instances) and not thread-safe.
+Deadlines use `std::chrono::steady_clock`.
 
 ## Usage
 ```cpp

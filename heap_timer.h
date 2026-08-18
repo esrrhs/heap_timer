@@ -1,26 +1,56 @@
 #pragma once
 
-#include <cassert>
-#include <stdint.h>
-#include <unordered_map>
-#include <unordered_set>
-#include <vector>
-#include <cstddef>
-#include <cmath>
-#include <algorithm>
 #include <chrono>
+#include <cstdint>
+#include <limits>
 #include <memory>
+#include <unordered_map>
+#include <utility>
+#include <vector>
 
 class HeapTimer {
 public:
-    HeapTimer() = default;
+    using Clock = std::chrono::steady_clock;
+    using TimePoint = Clock::time_point;
+    using TimerId = uint64_t;
 
+    HeapTimer() = default;
     ~HeapTimer() = default;
 
-    uint32_t Add(uint32_t delay_ms) {
-        auto now = std::chrono::system_clock::now();
-        if (heap_size_ >= static_cast<int>(heap_.size())) {
-            // Grow slice.
+    HeapTimer(const HeapTimer&) = delete;
+    HeapTimer& operator=(const HeapTimer&) = delete;
+
+    HeapTimer(HeapTimer&& other) noexcept
+        : timer_id_(other.timer_id_),
+          heap_(std::move(other.heap_)),
+          heap_size_(other.heap_size_),
+          timer_map_(std::move(other.timer_map_)) {
+        other.timer_id_ = 0;
+        other.heap_size_ = 0;
+    }
+
+    HeapTimer& operator=(HeapTimer&& other) noexcept {
+        if (this != &other) {
+            timer_id_ = other.timer_id_;
+            heap_ = std::move(other.heap_);
+            heap_size_ = other.heap_size_;
+            timer_map_ = std::move(other.timer_map_);
+            other.timer_id_ = 0;
+            other.heap_size_ = 0;
+        }
+        return *this;
+    }
+
+    // Not thread-safe. delay_ms is relative to a monotonic clock.
+    TimerId Add(uint32_t delay_ms) {
+        return AddAt(Clock::now() + std::chrono::milliseconds(delay_ms));
+    }
+
+    TimerId AddAt(TimePoint when) {
+        if (heap_size_ >= static_cast<size_t>(std::numeric_limits<int32_t>::max())) {
+            return 0;
+        }
+        if (heap_size_ >= heap_.size()) {
             size_t n = 16;
             if (n <= heap_.size()) {
                 n = heap_.size() * 3 / 2;
@@ -28,30 +58,31 @@ public:
             heap_.resize(n);
         }
         auto t = std::make_shared<TimerNode>();
-        t->i = heap_size_++;
-        t->when = now + std::chrono::milliseconds(delay_ms);
-        t->id = timer_id_++;
+        t->i = static_cast<int32_t>(heap_size_++);
+        t->when = when;
+        t->id = ++timer_id_;
         heap_[t->i] = t;
         SiftUp(t->i);
         timer_map_[t->id] = t;
         return t->id;
     }
 
-    bool Del(uint32_t id) {
+    bool Del(TimerId id) {
         auto it = timer_map_.find(id);
         if (it == timer_map_.end()) {
             return false;
         }
         auto t = it->second;
-        timer_map_.erase(it);
-
         auto i = t->i;
-        if (i < 0 || i >= heap_size_ || heap_[i] != t) {
+        if (i < 0 || static_cast<size_t>(i) >= heap_size_ || heap_[i] != t) {
             return false;
         }
 
+        timer_map_.erase(it);
+        t->i = -1;
+
         heap_size_--;
-        if (i == heap_size_) {
+        if (static_cast<size_t>(i) == heap_size_) {
             heap_[i] = nullptr;
         } else {
             heap_[i] = heap_[heap_size_];
@@ -64,27 +95,27 @@ public:
         return true;
     }
 
-    std::vector<uint32_t> Update() {
-        auto now = std::chrono::system_clock::now();
-        std::vector<uint32_t> ret;
-        while (true) {
-            if (heap_size_ == 0) {
-                break;
-            }
-
+    std::vector<TimerId> Update() {
+        auto now = Clock::now();
+        std::vector<TimerId> ret;
+        while (heap_size_ > 0) {
             auto t = heap_[0];
             if (t->when > now) {
                 break;
             }
 
-            // remove from heap
-            heap_[0] = heap_[--heap_size_];
-            heap_[0]->i = 0;
-            SiftDown(0);
+            heap_size_--;
+            if (heap_size_ == 0) {
+                heap_[0] = nullptr;
+            } else {
+                heap_[0] = heap_[heap_size_];
+                heap_[heap_size_] = nullptr;
+                heap_[0]->i = 0;
+                SiftDown(0);
+            }
 
-            t->i = -1; // mark as removed
+            t->i = -1;
             timer_map_.erase(t->id);
-
             ret.push_back(t->id);
         }
 
@@ -100,7 +131,7 @@ private:
         auto when = heap_[i]->when;
         auto tmp = heap_[i];
         while (i > 0) {
-            auto p = (i - 1) / 4; // parent
+            auto p = (i - 1) / 4;
             if (when >= heap_[p]->when) {
                 break;
             }
@@ -116,19 +147,19 @@ private:
         auto when = heap_[i]->when;
         auto tmp = heap_[i];
         while (true) {
-            auto c = i * 4 + 1; // left child
-            auto c3 = c + 2; // mid child
-            if (c >= heap_size_) {
+            auto c = i * 4 + 1;
+            auto c3 = c + 2;
+            if (c < 0 || static_cast<size_t>(c) >= heap_size_) {
                 break;
             }
             auto w = heap_[c]->when;
-            if (c + 1 < heap_size_ && heap_[c + 1]->when < w) {
+            if (static_cast<size_t>(c + 1) < heap_size_ && heap_[c + 1]->when < w) {
                 w = heap_[c + 1]->when;
                 c++;
             }
-            if (c3 < heap_size_) {
+            if (c3 >= 0 && static_cast<size_t>(c3) < heap_size_) {
                 auto w3 = heap_[c3]->when;
-                if (c3 + 1 < heap_size_ && heap_[c3 + 1]->when < w3) {
+                if (static_cast<size_t>(c3 + 1) < heap_size_ && heap_[c3 + 1]->when < w3) {
                     w3 = heap_[c3 + 1]->when;
                     c3++;
                 }
@@ -148,16 +179,15 @@ private:
         }
     }
 
-private:
     struct TimerNode {
-        std::chrono::time_point<std::chrono::system_clock> when;
-        uint32_t id = 0;
+        TimePoint when{};
+        TimerId id = 0;
         int32_t i = 0;
     };
 
-    typedef std::shared_ptr<TimerNode> TimerNodePtr;
-    uint32_t timer_id_ = 0;
+    using TimerNodePtr = std::shared_ptr<TimerNode>;
+    TimerId timer_id_ = 0;
     std::vector<TimerNodePtr> heap_;
-    int heap_size_ = 0;
-    std::unordered_map<uint32_t, TimerNodePtr> timer_map_;
+    size_t heap_size_ = 0;
+    std::unordered_map<TimerId, TimerNodePtr> timer_map_;
 };
