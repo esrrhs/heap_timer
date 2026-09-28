@@ -1,0 +1,104 @@
+name: Release
+
+# Publish a GitHub Release when HEAP_TIMER_VERSION_STRING in heap_timer.h changes.
+on:
+  push:
+    branches: [ "master" ]
+    paths:
+      - "heap_timer.h"
+      - ".github/workflows/release.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  detect-version:
+    name: Detect version change
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      should_release: ${{ steps.check.outputs.should_release }}
+      version: ${{ steps.check.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Check HEAP_TIMER_VERSION_STRING
+        id: check
+        run: |
+          set -euo pipefail
+
+          extract_version() {
+            sed -n 's/^#define HEAP_TIMER_VERSION_STRING "\(.*\)"/\1/p' "$1" | head -n 1
+          }
+
+          VERSION="$(extract_version heap_timer.h)"
+          if [ -z "${VERSION}" ]; then
+            echo "Failed to parse HEAP_TIMER_VERSION_STRING from heap_timer.h"
+            exit 1
+          fi
+          echo "Current version: ${VERSION}"
+
+          PREV=""
+          if git rev-parse --verify HEAD^ >/dev/null 2>&1; then
+            PREV="$(git show HEAD^:heap_timer.h 2>/dev/null | sed -n 's/^#define HEAP_TIMER_VERSION_STRING "\(.*\)"/\1/p' | head -n 1 || true)"
+          fi
+          echo "Previous version: ${PREV:-<none>}"
+
+          CHANGED=false
+          if [ "${VERSION}" != "${PREV}" ]; then
+            CHANGED=true
+          fi
+
+          SHOULD=false
+          if git ls-remote --exit-code --tags origin "refs/tags/${VERSION}" >/dev/null 2>&1; then
+            echo "Tag ${VERSION} already exists, skip release"
+          elif [ "${CHANGED}" = true ] || [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            SHOULD=true
+            echo "Will publish ${VERSION}"
+          else
+            echo "Version unchanged (${VERSION}), skip release"
+          fi
+
+          {
+            echo "version=${VERSION}"
+            echo "should_release=${SHOULD}"
+          } >> "${GITHUB_OUTPUT}"
+
+  release:
+    name: Create GitHub Release
+    needs: detect-version
+    if: needs.detect-version.outputs.should_release == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Package header
+        run: |
+          set -euo pipefail
+          VERSION="${{ needs.detect-version.outputs.version }}"
+          PKG="heap_timer-${VERSION}"
+          mkdir -p "${PKG}"
+          cp heap_timer.h LICENSE README.md README_CN.md "${PKG}/"
+          zip -r "${PKG}.zip" "${PKG}"
+          tar -czf "${PKG}.tar.gz" "${PKG}"
+          ls -la "${PKG}.zip" "${PKG}.tar.gz"
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.detect-version.outputs.version }}
+          name: heap_timer ${{ needs.detect-version.outputs.version }}
+          generate_release_notes: true
+          files: |
+            heap_timer-*.zip
+            heap_timer-*.tar.gz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

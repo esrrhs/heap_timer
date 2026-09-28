@@ -2,6 +2,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <map>
+#include <string>
 #include <thread>
 #include <unordered_set>
 #include <utility>
@@ -158,8 +159,14 @@ int benchmark() {
     return 0;
 }
 
-int main() {
+int main(int argc, char** argv) {
     test();
-    benchmark();
+    std::cout << "unit tests passed" << std::endl;
+
+    // Default CI/smoke path skips the long-running benchmark.
+    // Run: ./heap_timer_test benchmark
+    if (argc > 1 && std::string(argv[1]) == "benchmark") {
+        return benchmark();
+    }
     return 0;
 }

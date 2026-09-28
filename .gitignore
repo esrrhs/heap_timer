@@ -16,10 +16,6 @@
 *.dylib
 *.dll
 
-# Fortran module files
-*.mod
-*.smod
-
 # Compiled Static libraries
 *.lai
 *.la
@@ -30,3 +26,30 @@
 *.exe
 *.out
 *.app
+
+# CMake build directories & generated files
+build/
+bin/
+CMakeCache.txt
+CMakeFiles/
+Makefile
+cmake_install.cmake
+*.cmake
+!CMakeLists.txt
+compile_commands.json
+
+# Logs & profiling
+*.log
+*.prof
+
+# IDE & Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+*.user
+*.suo
+*.sdf
+*.opensdf

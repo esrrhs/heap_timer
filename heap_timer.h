@@ -8,6 +8,12 @@
 #include <utility>
 #include <vector>
 
+// Version is manually bumped when a release is intended (watched by release.yml).
+#define HEAP_TIMER_VERSION_MAJOR 1
+#define HEAP_TIMER_VERSION_MINOR 0
+#define HEAP_TIMER_VERSION_PATCH 0
+#define HEAP_TIMER_VERSION_STRING "1.0.0"
+
 class HeapTimer {
 public:
     using Clock = std::chrono::steady_clock;
