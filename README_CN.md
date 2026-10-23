@@ -25,6 +25,40 @@
 * **O(log n)**：`Add` / `AddAt` / `Del` / `Update`
 * **仅可移动**：不可拷贝（节点不在实例间共享），**非线程安全**
 
+
+## 算法演示
+
+交互式可视化 **四叉最小堆** 定时器，**点开即可操作**：
+
+**[▶ 在线算法演示](https://esrrhs.github.io/heap_timer/)**
+
+（同源文件也可本地打开 [`docs/heap_timer_demo.html`](docs/heap_timer_demo.html)，单文件、无构建、无外部依赖。）
+
+演示覆盖与 `heap_timer.h` 一致的操作：
+
+- **插入 Insert（Add / AddAt）**：在 `heap_size_` 追加 `TimerNode { when, id, i }`，再沿父链 `(i−1)/4` **SiftUp**。
+- **触发 Update**：当根节点 `when ≤ now` 时反复弹根（末尾换到下标 0，再 **SiftDown**），从 `timer_map_` 擦除并收集到期 id。
+- **删除 Delete（Del）**：经 `timer_map_` 定位，标记 `i = -1`，末尾填洞后对该下标先 **SiftUp** 再 **SiftDown**（与 C++ 相同）。
+- **堆调整 Sift**：`i` 的子节点为 `i×4+1 … i×4+4`；SiftDown 在至多四个孩子中选最小者下沉。
+
+> 真实代码为仅头文件的 C++（`steady_clock`、`delay_ms`）。演示页用抽象时间单位做教学动画（高亮上浮/下沉路径与根弹出）。**非线程安全。**
+
+```mermaid
+flowchart TB
+  R["根 i=0 · 最小 when"]
+  C1["i=1"]
+  C2["i=2"]
+  C3["i=3"]
+  C4["i=4"]
+  R --> C1
+  R --> C2
+  R --> C3
+  R --> C4
+  C1 --> G1["i=5..8"]
+  C2 --> G2["i=9..12"]
+  note["parent(i)=⌊(i−1)/4⌋"]
+```
+
 ## 前置依赖
 
 * CMake (>= 3.12)

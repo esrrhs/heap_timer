@@ -25,6 +25,40 @@ Drop in a single header (`heap_timer.h`). No libraries to link.
 * **O(log n) ops**: `Add` / `AddAt` / `Del` / `Update`
 * **Move-only**: not copyable (nodes are not shared across instances) and **not thread-safe**
 
+
+## 算法演示 / Algorithm Demo
+
+Interactive visualization of the **4-ary min-heap** timer — open and click around:
+
+**[▶ Online algorithm demo](https://esrrhs.github.io/heap_timer/)**
+
+(Same file also works locally: [`docs/heap_timer_demo.html`](docs/heap_timer_demo.html) — single file, no build, no CDN.)
+
+The demo mirrors the operations in `heap_timer.h`:
+
+- **Insert Add / AddAt**：append a `TimerNode { when, id, i }` at `heap_size_`, then **SiftUp** along parents `(i−1)/4`.
+- **Update**：while root `when ≤ now`, pop root (swap last → index 0, **SiftDown**), erase from `timer_map_`, collect expired ids.
+- **Delete Del**：find via `timer_map_`, mark `i = -1`, swap last into the hole, then **SiftUp** and **SiftDown** on that index (same as C++).
+- **Sift**：children of `i` are `i×4+1 … i×4+4`; SiftDown picks the minimum among up to four children.
+
+> Real code is header-only C++ (`steady_clock`, `delay_ms`). The demo uses abstract time units for teaching and animates sift paths / root pops. **Not thread-safe.**
+
+```mermaid
+flowchart TB
+  R["root i=0 · min when"]
+  C1["i=1"]
+  C2["i=2"]
+  C3["i=3"]
+  C4["i=4"]
+  R --> C1
+  R --> C2
+  R --> C3
+  R --> C4
+  C1 --> G1["i=5..8"]
+  C2 --> G2["i=9..12"]
+  note["parent(i)=⌊(i−1)/4⌋"]
+```
+
 ## Prerequisites
 
 * CMake (>= 3.12)
