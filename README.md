@@ -26,7 +26,7 @@ Drop in a single header (`heap_timer.h`). No libraries to link.
 * **Move-only**: not copyable (nodes are not shared across instances) and **not thread-safe**
 
 
-## 算法演示 / Algorithm Demo
+## Algorithm Demo
 
 Interactive visualization of the **4-ary min-heap** timer — open and click around:
 
@@ -36,10 +36,10 @@ Interactive visualization of the **4-ary min-heap** timer — open and click aro
 
 The demo mirrors the operations in `heap_timer.h`:
 
-- **Insert Add / AddAt**：append a `TimerNode { when, id, i }` at `heap_size_`, then **SiftUp** along parents `(i−1)/4`.
-- **Update**：while root `when ≤ now`, pop root (swap last → index 0, **SiftDown**), erase from `timer_map_`, collect expired ids.
-- **Delete Del**：find via `timer_map_`, mark `i = -1`, swap last into the hole, then **SiftUp** and **SiftDown** on that index (same as C++).
-- **Sift**：children of `i` are `i×4+1 … i×4+4`; SiftDown picks the minimum among up to four children.
+- **Insert Add / AddAt**: append a `TimerNode { when, id, i }` at `heap_size_`, then **SiftUp** along parents `(i−1)/4`.
+- **Update**: while root `when ≤ now`, pop root (swap last → index 0, **SiftDown**), erase from `timer_map_`, collect expired ids.
+- **Delete Del**: find via `timer_map_`, mark `i = -1`, swap last into the hole, then **SiftUp** and **SiftDown** on that index (same as C++).
+- **Sift**: children of `i` are `i×4+1 … i×4+4`; SiftDown picks the minimum among up to four children.
 
 > Real code is header-only C++ (`steady_clock`, `delay_ms`). The demo uses abstract time units for teaching and animates sift paths / root pops. **Not thread-safe.**
 
