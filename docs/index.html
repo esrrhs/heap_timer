@@ -37,7 +37,15 @@
     margin: 0 auto;
     padding: 24px 20px 48px;
   }
-  header { margin-bottom: 20px; }
+  header {
+    margin-bottom: 20px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .header-text { flex: 1; min-width: 200px; }
   header h1 {
     font-size: 1.55rem;
     font-weight: 700;
@@ -48,6 +56,32 @@
     color: var(--muted);
     font-size: 0.92rem;
     margin-top: 6px;
+  }
+  .lang-toggle {
+    display: inline-flex;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 3px;
+    flex-shrink: 0;
+    align-self: flex-start;
+  }
+  .lang-toggle button {
+    background: transparent;
+    color: var(--muted);
+    border: none;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s, filter 0.15s;
+  }
+  .lang-toggle button:hover { filter: brightness(1.15); color: var(--text); }
+  .lang-toggle button.active {
+    background: var(--panel2);
+    color: var(--accent);
+    box-shadow: 0 0 0 1px var(--border);
   }
   .note {
     background: linear-gradient(135deg, #1a2838, #1e2433);
@@ -426,16 +460,26 @@
     font-size: 0.78rem;
   }
   footer a { color: var(--accent); }
+  footer code {
+    font-family: var(--mono);
+    font-size: 0.9em;
+  }
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
-    <h1>HeapTimer <span>算法演示</span></h1>
-    <p class="subtitle">4-ary min-heap timer · 对应 esrrhs/heap_timer（仿 Golang 四叉堆定时器）</p>
+    <div class="header-text">
+      <h1>HeapTimer <span data-i18n="h1_accent">算法演示</span></h1>
+      <p class="subtitle" data-i18n="subtitle">4-ary min-heap timer · 对应 esrrhs/heap_timer（仿 Golang 四叉堆定时器）</p>
+    </div>
+    <div class="lang-toggle" role="group" aria-label="Language">
+      <button type="button" id="btn-lang-zh" data-lang="zh" class="active">中文</button>
+      <button type="button" id="btn-lang-en" data-lang="en">English</button>
+    </div>
   </header>
 
-  <div class="note">
+  <div class="note" data-i18n-html="note">
     <strong>教学时间：</strong>本演示使用抽象时间单位（非真实毫秒）。
     <code>Add(delay)</code> 写入 <code>when = now + delay</code>，再 <code>SiftUp</code>；
     <code>Update(now)</code> 在根节点 <code>when ≤ now</code> 时反复弹出根（换末尾到 0，再 <code>SiftDown</code>）；
@@ -449,84 +493,84 @@
         <div class="status">
           <div class="item">now <b id="st-now">0</b></div>
           <div class="item">heap_size_ <b id="st-size">0</b></div>
-          <div class="item">下次 ID <b id="st-nid">1</b></div>
-          <div class="item">根 when <b id="st-root">—</b></div>
+          <div class="item"><span data-i18n="st_next_id">下次 ID</span> <b id="st-nid">1</b></div>
+          <div class="item"><span data-i18n="st_root_when">根 when</span> <b id="st-root">—</b></div>
         </div>
 
         <div class="viz-section">
-          <h3>数组视图 heap_[]（下标 = 堆索引 i）</h3>
+          <h3 data-i18n="viz_array">数组视图 heap_[]（下标 = 堆索引 i）</h3>
           <div class="heap-array" id="heap-array"></div>
         </div>
 
         <div class="viz-section">
-          <h3>四叉树视图（每层最多 4 个子）</h3>
+          <h3 data-i18n="viz_tree">四叉树视图（每层最多 4 个子）</h3>
           <div class="heap-tree" id="heap-tree"></div>
           <p class="tree-meta" id="tree-meta">parent(i) = ⌊(i−1)/4⌋ · children(i) = 4i+1 … 4i+4</p>
         </div>
 
         <div class="legend">
-          <span class="lg-root">根（最小 when）</span>
-          <span class="lg-insert">插入</span>
-          <span class="lg-sift">Sift 路径</span>
-          <span class="lg-fire">触发/过期</span>
-          <span class="lg-delete">删除</span>
+          <span class="lg-root" data-i18n="legend_root">根（最小 when）</span>
+          <span class="lg-insert" data-i18n="legend_insert">插入</span>
+          <span class="lg-sift" data-i18n="legend_sift">Sift 路径</span>
+          <span class="lg-fire" data-i18n="legend_fire">触发/过期</span>
+          <span class="lg-delete" data-i18n="legend_delete">删除</span>
         </div>
       </div>
     </div>
 
     <div class="controls">
       <div class="card">
-        <h2><span class="dot" style="background:var(--insert)"></span> 插入 Insert</h2>
+        <h2><span class="dot" style="background:var(--insert)"></span> <span data-i18n="card_insert">插入 Insert</span></h2>
         <div class="ctrl-group">
-          <label>延迟 delay（相对 now 的时间单位）</label>
+          <label data-i18n="label_delay">延迟 delay（相对 now 的时间单位）</label>
           <div class="row">
             <input type="number" id="delay-input" value="5" min="0" max="9999" />
-            <button class="btn-insert" id="btn-insert">插入 Add</button>
+            <button class="btn-insert" id="btn-insert" data-i18n="btn_insert">插入 Add</button>
           </div>
-          <p class="ops-hint">when = now + delay；追加到 heap_size_，再 SiftUp</p>
+          <p class="ops-hint" data-i18n="hint_insert">when = now + delay；追加到 heap_size_，再 SiftUp</p>
         </div>
       </div>
 
       <div class="card">
-        <h2><span class="dot" style="background:var(--accent)"></span> 触发 Update</h2>
+        <h2><span class="dot" style="background:var(--accent)"></span> <span data-i18n="card_update">触发 Update</span></h2>
         <div class="ctrl-group">
           <div class="row">
-            <button class="btn-trigger" id="btn-step1">now += 1</button>
-            <button class="btn-step" id="btn-step5">now += 5</button>
+            <button class="btn-trigger" id="btn-step1" data-i18n="btn_step1">now += 1</button>
+            <button class="btn-step" id="btn-step5" data-i18n="btn_step5">now += 5</button>
           </div>
-          <label style="margin-top:10px">或设为绝对值</label>
+          <label style="margin-top:10px" data-i18n="label_abs_now">或设为绝对值</label>
           <div class="row">
             <input type="number" id="now-input" value="0" min="0" />
-            <button class="btn-trigger" id="btn-setnow">设 now 并 Update</button>
+            <button class="btn-trigger" id="btn-setnow" data-i18n="btn_setnow">设 now 并 Update</button>
           </div>
-          <p class="ops-hint">while 根 when ≤ now：弹根 → 末尾填 0 → SiftDown</p>
+          <p class="ops-hint" data-i18n="hint_update">while 根 when ≤ now：弹根 → 末尾填 0 → SiftDown</p>
         </div>
       </div>
 
       <div class="card">
-        <h2><span class="dot" style="background:var(--delete)"></span> 删除 Delete</h2>
+        <h2><span class="dot" style="background:var(--delete)"></span> <span data-i18n="card_delete">删除 Delete</span></h2>
         <div class="ctrl-group">
-          <label>定时器 ID（或点击节点）</label>
+          <label data-i18n="label_del_id">定时器 ID（或点击节点）</label>
           <div class="row">
             <input type="number" id="del-input" value="1" min="1" />
-            <button class="btn-delete" id="btn-delete">删除 Del</button>
+            <button class="btn-delete" id="btn-delete" data-i18n="btn_delete">删除 Del</button>
           </div>
-          <p class="ops-hint">标记 i=-1，末尾填洞，SiftUp 再 SiftDown</p>
+          <p class="ops-hint" data-i18n="hint_delete">标记 i=-1，末尾填洞，SiftUp 再 SiftDown</p>
         </div>
       </div>
 
       <div class="card">
-        <h2><span class="dot" style="background:#a371f7"></span> 演示</h2>
+        <h2><span class="dot" style="background:#a371f7"></span> <span data-i18n="card_demo">演示</span></h2>
         <div class="row" style="margin-bottom:8px">
-          <button class="btn-demo" id="btn-demo">▶ 演示一遍</button>
+          <button class="btn-demo" id="btn-demo" data-i18n="btn_demo">▶ 演示一遍</button>
         </div>
         <div class="row">
-          <button class="btn-reset" id="btn-reset">重置 Reset</button>
+          <button class="btn-reset" id="btn-reset" data-i18n="btn_reset">重置 Reset</button>
         </div>
       </div>
 
       <div class="card">
-        <h2><span class="dot" style="background:var(--muted)"></span> 操作日志</h2>
+        <h2><span class="dot" style="background:var(--muted)"></span> <span data-i18n="card_log">操作日志</span></h2>
         <div class="log-panel" id="log"></div>
       </div>
     </div>
@@ -535,25 +579,25 @@
   <div class="walkthrough">
     <div class="steps">
       <div class="step s-insert">
-        <h3>① 插入 / SiftUp</h3>
-        <p>Append 到 heap_[heap_size_]，沿父链 (i−1)/4 上浮，直到 when ≥ 父 when。写入 timer_map_。</p>
+        <h3 data-i18n="walk_insert_title">① 插入 / SiftUp</h3>
+        <p data-i18n="walk_insert_body">Append 到 heap_[heap_size_]，沿父链 (i−1)/4 上浮，直到 when ≥ 父 when。写入 timer_map_。</p>
       </div>
       <div class="step s-update">
-        <h3>② Update / 弹根</h3>
-        <p>根 when ≤ now 时弹出：末尾换到 0，SiftDown 选四子中最小者下沉；从 map 擦除并收集 id。</p>
+        <h3 data-i18n="walk_update_title">② Update / 弹根</h3>
+        <p data-i18n="walk_update_body">根 when ≤ now 时弹出：末尾换到 0，SiftDown 选四子中最小者下沉；从 map 擦除并收集 id。</p>
       </div>
       <div class="step s-delete">
-        <h3>③ 删除 + Sift</h3>
-        <p>按 id 查 map，i=-1；末尾填洞后对该下标先 SiftUp 再 SiftDown（与 C++ 相同）。</p>
+        <h3 data-i18n="walk_delete_title">③ 删除 + Sift</h3>
+        <p data-i18n="walk_delete_body">按 id 查 map，i=-1；末尾填洞后对该下标先 SiftUp 再 SiftDown（与 C++ 相同）。</p>
       </div>
       <div class="step s-why">
-        <h3>④ 为何四叉</h3>
-        <p>比二叉堆更浅：n 个节点高度约 log₄ n。SiftDown 每次比较最多 4 子，缓存友好，适合大量定时器。</p>
+        <h3 data-i18n="walk_why_title">④ 为何四叉</h3>
+        <p data-i18n="walk_why_body">比二叉堆更浅：n 个节点高度约 log₄ n。SiftDown 每次比较最多 4 子，缓存友好，适合大量定时器。</p>
       </div>
     </div>
   </div>
 
-  <footer>
+  <footer data-i18n-html="footer">
     源码：<a href="../heap_timer.h">heap_timer.h</a> ·
     打开本页：克隆仓库后用浏览器打开 <code>docs/heap_timer_demo.html</code>（无需构建）
   </footer>
@@ -716,6 +760,177 @@
     }
   }
 
+  // ——— i18n ———
+  const LANG_KEY = 'heap_timer_demo_lang';
+  const I18N = {
+    zh: {
+      title: 'HeapTimer 算法演示 · 4-ary min-heap timer',
+      h1_accent: '算法演示',
+      subtitle: '4-ary min-heap timer · 对应 esrrhs/heap_timer（仿 Golang 四叉堆定时器）',
+      note: '<strong>教学时间：</strong>本演示使用抽象时间单位（非真实毫秒）。 <code>Add(delay)</code> 写入 <code>when = now + delay</code>，再 <code>SiftUp</code>； <code>Update(now)</code> 在根节点 <code>when ≤ now</code> 时反复弹出根（换末尾到 0，再 <code>SiftDown</code>）； <code>Del(id)</code> 经 <code>timer_map_</code> 定位，末尾填洞后先 <code>SiftUp</code> 再 <code>SiftDown</code>。 父子：父 <code>(i−1)/4</code>，子 <code>i×4+1 .. i×4+4</code>。逻辑与 <code>heap_timer.h</code> 一致；真实代码用 <code>steady_clock</code>，且<strong>非线程安全</strong>。',
+      st_next_id: '下次 ID',
+      st_root_when: '根 when',
+      viz_array: '数组视图 heap_[]（下标 = 堆索引 i）',
+      viz_tree: '四叉树视图（每层最多 4 个子）',
+      legend_root: '根（最小 when）',
+      legend_insert: '插入',
+      legend_sift: 'Sift 路径',
+      legend_fire: '触发/过期',
+      legend_delete: '删除',
+      card_insert: '插入 Insert',
+      label_delay: '延迟 delay（相对 now 的时间单位）',
+      btn_insert: '插入 Add',
+      hint_insert: 'when = now + delay；追加到 heap_size_，再 SiftUp',
+      card_update: '触发 Update',
+      btn_step1: 'now += 1',
+      btn_step5: 'now += 5',
+      label_abs_now: '或设为绝对值',
+      btn_setnow: '设 now 并 Update',
+      hint_update: 'while 根 when ≤ now：弹根 → 末尾填 0 → SiftDown',
+      card_delete: '删除 Delete',
+      label_del_id: '定时器 ID（或点击节点）',
+      btn_delete: '删除 Del',
+      hint_delete: '标记 i=-1，末尾填洞，SiftUp 再 SiftDown',
+      card_demo: '演示',
+      btn_demo: '▶ 演示一遍',
+      btn_reset: '重置 Reset',
+      card_log: '操作日志',
+      walk_insert_title: '① 插入 / SiftUp',
+      walk_insert_body: 'Append 到 heap_[heap_size_]，沿父链 (i−1)/4 上浮，直到 when ≥ 父 when。写入 timer_map_。',
+      walk_update_title: '② Update / 弹根',
+      walk_update_body: '根 when ≤ now 时弹出：末尾换到 0，SiftDown 选四子中最小者下沉；从 map 擦除并收集 id。',
+      walk_delete_title: '③ 删除 + Sift',
+      walk_delete_body: '按 id 查 map，i=-1；末尾填洞后对该下标先 SiftUp 再 SiftDown（与 C++ 相同）。',
+      walk_why_title: '④ 为何四叉',
+      walk_why_body: '比二叉堆更浅：n 个节点高度约 log₄ n。SiftDown 每次比较最多 4 子，缓存友好，适合大量定时器。',
+      footer: '源码：<a href="../heap_timer.h">heap_timer.h</a> · 打开本页：克隆仓库后用浏览器打开 <code>docs/heap_timer_demo.html</code>（无需构建）',
+      tree_empty: '堆为空 — 插入定时器后显示四叉树',
+      tag_insert: '插入',
+      tag_sift_up: '上浮',
+      tag_trigger: '触发',
+      tag_sift_down: '下沉',
+      tag_delete: '删除',
+      tag_info: '信息',
+      tag_demo: '演示',
+      log_insert: 'T{id} delay={delay} → when={when}；追加下标 {start}，SiftUp 路径 [{path}] → 最终 i={final}',
+      log_sift_up: 'SiftUp: {path}',
+      log_trigger_none: 'now {before} → {now}；根未到期（根 when={root}）',
+      log_trigger_fire: '弹出根 T{id} (when={when})；SiftDown 路径 [{path}]',
+      log_sift_down: 'SiftDown: {path}',
+      log_delete_miss: '未找到 T{id}',
+      log_delete_ok: 'T{id} 洞下标={hole}；SiftUp [{up}] → SiftDown [{down}]',
+      log_reset: '已重置。四叉最小堆：parent=(i−1)/4，children=4i+1..4i+4。真实库：steady_clock + delay_ms。',
+      demo_start: '开始：插入 → SiftUp → Update 弹根 → 删除(SiftUp+SiftDown) → 说明四叉优势',
+      demo_advance: '堆顶应为 when 最小者。推进 now，观察根弹出与 SiftDown…',
+      demo_delete: '删除一个中间节点，观察末尾填洞后的 SiftUp + SiftDown…',
+      demo_clear: '继续 Update 清空剩余到期项…',
+      demo_reinsert: '再插入若干，留下可继续探索的堆…',
+      demo_end: '演示结束。四叉堆高度约 log₄ n，比二叉更浅；可手动插入 / 推进 now / 删除继续探索。'
+    },
+    en: {
+      title: 'HeapTimer Algorithm Demo · 4-ary min-heap timer',
+      h1_accent: 'Algorithm Demo',
+      subtitle: '4-ary min-heap timer · matches esrrhs/heap_timer (Golang-style 4-ary heap timer)',
+      note: '<strong>Teaching time:</strong> this demo uses abstract time units (not real milliseconds). <code>Add(delay)</code> writes <code>when = now + delay</code>, then <code>SiftUp</code>; <code>Update(now)</code> repeatedly pops the root while <code>when ≤ now</code> (swap last into 0, then <code>SiftDown</code>); <code>Del(id)</code> looks up <code>timer_map_</code>, fills the hole with the last entry, then <code>SiftUp</code> then <code>SiftDown</code>. Parent/children: parent <code>(i−1)/4</code>, children <code>i×4+1 .. i×4+4</code>. Logic matches <code>heap_timer.h</code>; real code uses <code>steady_clock</code> and is <strong>not thread-safe</strong>.',
+      st_next_id: 'next ID',
+      st_root_when: 'root when',
+      viz_array: 'Array view heap_[] (index = heap index i)',
+      viz_tree: '4-ary tree view (up to 4 children per node)',
+      legend_root: 'Root (min when)',
+      legend_insert: 'Insert',
+      legend_sift: 'Sift path',
+      legend_fire: 'Fire / expire',
+      legend_delete: 'Delete',
+      card_insert: 'Insert',
+      label_delay: 'delay (time units relative to now)',
+      btn_insert: 'Add',
+      hint_insert: 'when = now + delay; append at heap_size_, then SiftUp',
+      card_update: 'Update',
+      btn_step1: 'now += 1',
+      btn_step5: 'now += 5',
+      label_abs_now: 'Or set absolute now',
+      btn_setnow: 'Set now & Update',
+      hint_update: 'while root when ≤ now: pop root → last into 0 → SiftDown',
+      card_delete: 'Delete',
+      label_del_id: 'Timer ID (or click a node)',
+      btn_delete: 'Del',
+      hint_delete: 'Mark i=-1, fill hole with last, SiftUp then SiftDown',
+      card_demo: 'Demo',
+      btn_demo: '▶ Run demo',
+      btn_reset: 'Reset',
+      card_log: 'Operation log',
+      walk_insert_title: '① Insert / SiftUp',
+      walk_insert_body: 'Append at heap_[heap_size_], sift up along parents (i−1)/4 until when ≥ parent when. Write timer_map_.',
+      walk_update_title: '② Update / pop root',
+      walk_update_body: 'While root when ≤ now: swap last into 0, SiftDown picking the min of up to 4 children; erase from map and collect id.',
+      walk_delete_title: '③ Delete + Sift',
+      walk_delete_body: 'Lookup id in map, set i=-1; fill hole with last, then SiftUp then SiftDown on that index (same as C++).',
+      walk_why_title: '④ Why 4-ary',
+      walk_why_body: 'Shallower than a binary heap: height ≈ log₄ n. SiftDown compares up to 4 children — cache-friendly for many timers.',
+      footer: 'Source: <a href="../heap_timer.h">heap_timer.h</a> · Open locally: <code>docs/heap_timer_demo.html</code> in a browser (no build)',
+      tree_empty: 'Heap empty — insert timers to show the 4-ary tree',
+      tag_insert: 'insert',
+      tag_sift_up: 'sift↑',
+      tag_trigger: 'update',
+      tag_sift_down: 'sift↓',
+      tag_delete: 'delete',
+      tag_info: 'info',
+      tag_demo: 'demo',
+      log_insert: 'T{id} delay={delay} → when={when}; append idx {start}, SiftUp path [{path}] → final i={final}',
+      log_sift_up: 'SiftUp: {path}',
+      log_trigger_none: 'now {before} → {now}; root not due (root when={root})',
+      log_trigger_fire: 'pop root T{id} (when={when}); SiftDown path [{path}]',
+      log_sift_down: 'SiftDown: {path}',
+      log_delete_miss: 'T{id} not found',
+      log_delete_ok: 'T{id} hole idx={hole}; SiftUp [{up}] → SiftDown [{down}]',
+      log_reset: 'Reset. 4-ary min-heap: parent=(i−1)/4, children=4i+1..4i+4. Real lib: steady_clock + delay_ms.',
+      demo_start: 'Start: Insert → SiftUp → Update pop root → Delete(SiftUp+SiftDown) → why 4-ary',
+      demo_advance: 'Root should hold the min when. Advance now; watch root pop and SiftDown…',
+      demo_delete: 'Delete a mid-heap node; watch hole fill then SiftUp + SiftDown…',
+      demo_clear: 'Keep Update to clear remaining due timers…',
+      demo_reinsert: 'Insert a few more, leaving a heap to explore…',
+      demo_end: 'Demo done. 4-ary height ≈ log₄ n (shallower than binary). Keep inserting / advancing now / deleting.'
+    }
+  };
+
+  let curLang = 'zh';
+
+  function t(key, vars) {
+    const dict = I18N[curLang] || I18N.zh;
+    let s = (dict && dict[key] !== undefined) ? dict[key] : ((I18N.zh && I18N.zh[key]) || key);
+    if (vars) {
+      Object.keys(vars).forEach(function (k) {
+        s = s.split('{' + k + '}').join(String(vars[k]));
+      });
+    }
+    return s;
+  }
+
+  function applyLang(lang) {
+    if (lang !== 'zh' && lang !== 'en') lang = 'zh';
+    curLang = lang;
+    try { localStorage.setItem(LANG_KEY, lang); } catch (e) { /* ignore */ }
+    document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en';
+    document.title = t('title');
+
+    document.querySelectorAll('[data-i18n]').forEach(function (el) {
+      el.textContent = t(el.getAttribute('data-i18n'));
+    });
+    document.querySelectorAll('[data-i18n-html]').forEach(function (el) {
+      el.innerHTML = t(el.getAttribute('data-i18n-html'));
+    });
+
+    document.querySelectorAll('.lang-toggle button').forEach(function (btn) {
+      btn.classList.toggle('active', btn.getAttribute('data-lang') === lang);
+    });
+
+    // Clear log on lang switch for consistency (already-emitted lines stay mixed otherwise)
+    if (typeof logEl !== 'undefined' && logEl) {
+      logEl.innerHTML = '';
+    }
+    if (typeof render === 'function') render();
+  }
+
   // UI
   const ht = new HeapTimer();
   let selectedId = null;
@@ -792,20 +1007,15 @@
         cell.classList.add('empty');
         cell.innerHTML = `<span class="idx">${i}</span><span class="nid">·</span><span class="when"></span>`;
       } else {
-        const t = ht.heap_[i];
-        cell.innerHTML = `<span class="idx">${i}</span><span class="nid">T${t.id}</span><span class="when">@${t.when}</span>`;
-        cell.title = `id=${t.id} when=${t.when} i=${t.i}`;
+        const tNode = ht.heap_[i];
+        cell.innerHTML = `<span class="idx">${i}</span><span class="nid">T${tNode.id}</span><span class="when">@${tNode.when}</span>`;
+        cell.title = `id=${tNode.id} when=${tNode.when} i=${tNode.i}`;
         cell.addEventListener('click', () => {
-          selectedId = t.id;
-          $('#del-input').value = t.id;
+          selectedId = tNode.id;
+          $('#del-input').value = tNode.id;
           render();
         });
-        applyHL(cell, hl, t.id);
-      }
-      if (i < ht.heap_size_ && ht.heap_[i]) {
-        // root etc already via applyHL
-      } else if (i === 0 && ht.heap_size_ === 0) {
-        /* empty */
+        applyHL(cell, hl, tNode.id);
       }
       arrayEl.appendChild(cell);
     }
@@ -813,7 +1023,7 @@
     // Tree view by levels
     treeEl.innerHTML = '';
     if (ht.heap_size_ === 0) {
-      treeEl.innerHTML = '<div class="tree-empty-hint">堆为空 — 插入定时器后显示四叉树</div>';
+      treeEl.innerHTML = '<div class="tree-empty-hint">' + t('tree_empty') + '</div>';
       return;
     }
 
@@ -830,19 +1040,19 @@
       row.className = 'tree-level';
       const end = Math.min(start + count, ht.heap_size_);
       for (let i = start; i < end; i++) {
-        const t = ht.heap_[i];
-        if (!t) continue;
+        const tNode = ht.heap_[i];
+        if (!tNode) continue;
         const node = document.createElement('div');
         node.className = 'tree-node';
         node.dataset.idx = i;
-        node.innerHTML = `<span class="t-idx">${i}</span><span class="t-id">T${t.id}</span><span class="t-when">@${t.when}</span>`;
-        node.title = `id=${t.id} when=${t.when} i=${t.i} · parent=${i === 0 ? '—' : Math.floor((i - 1) / 4)}`;
+        node.innerHTML = `<span class="t-idx">${i}</span><span class="t-id">T${tNode.id}</span><span class="t-when">@${tNode.when}</span>`;
+        node.title = `id=${tNode.id} when=${tNode.when} i=${tNode.i} · parent=${i === 0 ? '—' : Math.floor((i - 1) / 4)}`;
         node.addEventListener('click', () => {
-          selectedId = t.id;
-          $('#del-input').value = t.id;
+          selectedId = tNode.id;
+          $('#del-input').value = tNode.id;
           render();
         });
-        applyHL(node, hl, t.id);
+        applyHL(node, hl, tNode.id);
         row.appendChild(node);
       }
       levels.appendChild(row);
@@ -856,9 +1066,12 @@
 
   function doInsert(delay, animate) {
     const res = ht.Add(delay);
-    log('插入', `T${res.id} delay=${delay} → when=${res.when}；追加下标 ${res.path[0]}，SiftUp 路径 [${res.path.join(' → ')}] → 最终 i=${res.i}`, 'tag-insert');
+    log(t('tag_insert'), t('log_insert', {
+      id: res.id, delay: delay, when: res.when,
+      start: res.path[0], path: res.path.join(' → '), final: res.i
+    }), 'tag-insert');
     if (res.path.length > 1) {
-      log('上浮', `SiftUp: ${res.path.join(' → ')}`, 'tag-sift');
+      log(t('tag_sift_up'), t('log_sift_up', { path: res.path.join(' → ') }), 'tag-sift');
     }
     render({
       insertIdx: res.i,
@@ -872,14 +1085,18 @@
     const before = ht.now_;
     const { fired, events } = ht.Update(targetNow);
     if (fired.length === 0) {
-      log('触发', `now ${before} → ${ht.now_}；根未到期（根 when=${ht.rootWhen() ?? '—'}）`, 'tag-trigger');
+      log(t('tag_trigger'), t('log_trigger_none', {
+        before: before, now: ht.now_, root: ht.rootWhen() ?? '—'
+      }), 'tag-trigger');
       render();
       return { fired, events };
     }
     for (const ev of events) {
-      log('触发', `弹出根 T${ev.id} (when=${ev.when})；SiftDown 路径 [${ev.downPath.join(' → ') || '0'}]`, 'tag-fire');
+      log(t('tag_trigger'), t('log_trigger_fire', {
+        id: ev.id, when: ev.when, path: ev.downPath.join(' → ') || '0'
+      }), 'tag-fire');
       if (ev.downPath.length > 1) {
-        log('下沉', `SiftDown: ${ev.downPath.join(' → ')}`, 'tag-sift');
+        log(t('tag_sift_down'), t('log_sift_down', { path: ev.downPath.join(' → ') }), 'tag-sift');
       }
     }
     // Highlight root fire then sift of last event
@@ -900,15 +1117,19 @@
   function doDelete(id) {
     const res = ht.Del(id);
     if (!res.ok) {
-      log('删除', `未找到 T${id}`, 'tag-delete');
+      log(t('tag_delete'), t('log_delete_miss', { id: id }), 'tag-delete');
       render();
       return;
     }
     const up = res.upPath || [];
     const down = res.downPath || [];
-    log('删除', `T${res.id} 洞下标=${res.hole}；SiftUp [${up.join(' → ') || res.hole}] → SiftDown [${down.join(' → ') || res.hole}]`, 'tag-delete');
-    if (up.length > 1) log('上浮', `SiftUp: ${up.join(' → ')}`, 'tag-sift');
-    if (down.length > 1) log('下沉', `SiftDown: ${down.join(' → ')}`, 'tag-sift');
+    log(t('tag_delete'), t('log_delete_ok', {
+      id: res.id, hole: res.hole,
+      up: up.join(' → ') || res.hole,
+      down: down.join(' → ') || res.hole
+    }), 'tag-delete');
+    if (up.length > 1) log(t('tag_sift_up'), t('log_sift_up', { path: up.join(' → ') }), 'tag-sift');
+    if (down.length > 1) log(t('tag_sift_down'), t('log_sift_down', { path: down.join(' → ') }), 'tag-sift');
     if (selectedId === id) selectedId = null;
     render({
       deleteIdx: res.hole,
@@ -921,7 +1142,7 @@
     ht.reset();
     selectedId = null;
     logEl.innerHTML = '';
-    log('信息', '已重置。四叉最小堆：parent=(i−1)/4，children=4i+1..4i+4。真实库：steady_clock + delay_ms。', 'tag-info');
+    log(t('tag_info'), t('log_reset'), 'tag-info');
     render();
   }
 
@@ -930,7 +1151,7 @@
     demoRunning = true;
     setBusy(true);
     resetAll();
-    log('演示', '开始：插入 → SiftUp → Update 弹根 → 删除(SiftUp+SiftDown) → 说明四叉优势', 'tag-demo');
+    log(t('tag_demo'), t('demo_start'), 'tag-demo');
     await sleep(400);
 
     // Insert several with various delays to build a non-trivial heap
@@ -949,7 +1170,7 @@
     doInsert(4);
     await sleep(700);
 
-    log('演示', '堆顶应为 when 最小者。推进 now，观察根弹出与 SiftDown…', 'tag-demo');
+    log(t('tag_demo'), t('demo_advance'), 'tag-demo');
     await sleep(400);
 
     // Advance to fire the earliest (when=1 at now=0 → need now>=1)
@@ -960,7 +1181,7 @@
     await doAdvance(2, true); // now=5
     await sleep(700);
 
-    log('演示', '删除一个中间节点，观察末尾填洞后的 SiftUp + SiftDown…', 'tag-demo');
+    log(t('tag_demo'), t('demo_delete'), 'tag-demo');
     await sleep(400);
     // Pick an existing id from the map
     const ids = [...ht.timer_map_.keys()];
@@ -968,21 +1189,21 @@
       // Prefer a non-root if possible
       let delId = ids[ids.length - 1];
       for (const id of ids) {
-        const t = ht.timer_map_.get(id);
-        if (t && t.i !== 0) { delId = id; break; }
+        const tNode = ht.timer_map_.get(id);
+        if (tNode && tNode.i !== 0) { delId = id; break; }
       }
       doDelete(delId);
       await sleep(800);
     }
 
-    log('演示', '继续 Update 清空剩余到期项…', 'tag-demo');
+    log(t('tag_demo'), t('demo_clear'), 'tag-demo');
     // Jump now high enough
-    const maxWhen = ht.heap_.slice(0, ht.heap_size_).reduce((m, t) => t ? Math.max(m, t.when) : m, ht.now_);
+    const maxWhen = ht.heap_.slice(0, ht.heap_size_).reduce((m, tn) => tn ? Math.max(m, tn.when) : m, ht.now_);
     await doUpdateTo(maxWhen, true);
     await sleep(500);
 
     // Re-insert a few to leave a visible heap
-    log('演示', '再插入若干，留下可继续探索的堆…', 'tag-demo');
+    log(t('tag_demo'), t('demo_reinsert'), 'tag-demo');
     doInsert(10);
     await sleep(400);
     doInsert(6);
@@ -993,7 +1214,7 @@
     await sleep(500);
 
     if (demoRunning) {
-      log('演示', '演示结束。四叉堆高度约 log₄ n，比二叉更浅；可手动插入 / 推进 now / 删除继续探索。', 'tag-demo');
+      log(t('tag_demo'), t('demo_end'), 'tag-demo');
     }
     demoRunning = false;
     setBusy(false);
@@ -1047,6 +1268,22 @@
   });
   $('#btn-demo').addEventListener('click', () => runDemo());
 
+  document.querySelectorAll('.lang-toggle button').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      const lang = btn.getAttribute('data-lang');
+      if (lang === curLang) return;
+      applyLang(lang);
+    });
+  });
+
+  // Init language (default zh), then reset
+  let saved = 'zh';
+  try {
+    const v = localStorage.getItem(LANG_KEY);
+    if (v === 'en' || v === 'zh') saved = v;
+  } catch (e) { /* ignore */ }
+  applyLang(saved);
+  // Heap starts empty; emit initial reset line in the active language
   resetAll();
 })();
 </script>
